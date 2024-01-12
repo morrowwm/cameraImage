@@ -1,0 +1,8 @@
+capture_interval: 30
+error_log_file: /home/fred/cam/webcamerror.log
+image_folder: /home/fred/cam/images
+rtsp_url: rtsp://fred@flintstone.br:yabba-dabba@192.168.0.8/stream1
+snapshot_file: yard.jpg
+website_dir: trex:/home/flintstone/web/attachments/
+timelapse_dir: stego:/opt/surveillance/camera0
+video_folder: /home/fred/cam/videos
