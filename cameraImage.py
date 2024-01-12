@@ -66,14 +66,15 @@ def get_image():
 
             # Timestamp and save the frame as a JPEG image
             timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-            text_region = frame[16:48, 32:512]
+            text_pos = [16, 48, 172, 600]
+            text_region = frame[text_pos[0]:text_pos[1], text_pos[2]: text_pos[3]]
             brightness = cv2.mean(text_region) 
             font_color = [0, 0, 0]
             for i in [0, 1, 2]:
                 if brightness[i] < 128: font_color[i] = 255
 
             cv2.putText(frame, timestamp,
-                (48, 48),  # bottom left corner of text 
+                (text_pos[2], text_pos[1]),  # bottom left corner of text 
                 cv2.FONT_HERSHEY_SIMPLEX, # font 
                 1.5, # font scale
                 font_color, # font color
