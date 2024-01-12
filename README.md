@@ -12,3 +12,5 @@ It's not overly complicated, but assumes you're a bit competent with python, ope
 I call it once per minute with a cron job.
 
 `* * * * * cd /home/fred/bin; /home/fred/bin/cameraImage.py`
+
+Thanks to https://www.briandorey.com/post/tplink-tapo-tc65-camera-capture-opencv-webcam for the starting point.
