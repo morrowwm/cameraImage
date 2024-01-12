@@ -1,5 +1,5 @@
 # cameraImage
-Read an rtsp video feed, extract an image for use in making timelapse video and website snapshot and write them to the appropriate directories.
+Read an rtsp video feed, extract image for use in making timelapse video and website snapshot and write to the appropriate directories.
 
 I built this to work with a TP-link Tapo C320WS camera, but should work with any camera providing an RTSP feed.
 
