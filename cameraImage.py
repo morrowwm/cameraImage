@@ -64,7 +64,22 @@ def get_image():
             #frame = blur_region(frame, blur1_x, blur1_y, blur1_width, blur1_height)
             #frame = blur_region(frame, blur2_x, blur2_y, blur2_width, blur2_height) 
 
-            # Save the frame as a JPEG image
+            # Timestamp and save the frame as a JPEG image
+            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+            text_region = frame[16:48, 32:512]
+            brightness = cv2.mean(text_region) 
+            font_color = [0, 0, 0]
+            for i in [0, 1, 2]:
+                if brightness[i] < 128: font_color[i] = 255
+
+            cv2.putText(frame, timestamp,
+                (48, 48),  # bottom left corner of text 
+                cv2.FONT_HERSHEY_SIMPLEX, # font 
+                1.5, # font scale
+                font_color, # font color
+                3, # thickness
+                2) # lineType
+
             timestamp = time.strftime("%Y%m%d%H%M%S")
 
             filename = f"{config['image_folder']}/eye2-{timestamp}.jpeg"
@@ -85,17 +100,6 @@ def get_image():
             #leq = clahe.apply(l)
             #lab_image = cv2.merge((leq,a,b))
             #website_image = cv2.cvtColor(lab_image, cv2.COLOR_LAB2BGR)
-            timestamp = time.strftime("%Y-%m-%d-%H:%M:%S")
-            text_region = website_image[12:36, 50:150]
-            brightness = cv2.mean(text_region) 
-            font_color = (255 - brightness[0], 255 - brightness[1], 255 - brightness[2])
-            cv2.putText(website_image, timestamp,
-                (50, 36),  # bottom left corner of text 
-                cv2.FONT_HERSHEY_SIMPLEX, # font 
-                0.5, # font scale
-                font_color, # font color
-                1, # thickness
-                2) # lineType
 
             filename = config['snapshot_file']
             cv2.imwrite(filename, website_image, [cv2.IMWRITE_JPEG_QUALITY, 95])
