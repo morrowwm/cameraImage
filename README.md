@@ -14,3 +14,8 @@ I call it once per minute with a cron job.
 `* * * * * cd /home/fred/bin; /home/fred/bin/cameraImage.py`
 
 Thanks to https://www.briandorey.com/post/tplink-tapo-tc65-camera-capture-opencv-webcam for the starting point.
+
+segmentAssemble.py merges the timelapse images nd any motion videos together into one integrated video. 
+* create directories ./motion and ./assemble nder the directory holding your timelapse images
+* sync the motion detection videos from the camera into the motion directory. I use a cronjab every 5 minutes
+* after 6:00AM, `python segmentAssemble.py`, then go into the assemble directory and run `bash assemble.sh`. On my poor old PC, it takes most of an hour to create it all.
