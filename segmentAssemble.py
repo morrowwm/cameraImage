@@ -24,12 +24,12 @@ video_ffmpeg = '/usr/bin/ffmpeg -i "{0}" -r 30 -filter:v "setpts=PTS/4,fps=30,{1
 # concatenate images into a video segment. frame rate is defined in input list
 image_ffmpeg = '/usr/bin/ffmpeg -safe 0 -r 30 -f image2 -f concat -i {0} -vcodec libx265 -n segment{1:03d}.mkv\n'
 # text format for timestamp on motion video (I don't like the timestamp provided by the camera)
-video_text = 'drawtext=text=\'{0}\':x=48:y=48:fontsize=32:fontcolor=white'
+video_text = 'drawtext=text=\'Motion detected at\: {0}\':x=48:y=48:fontsize=32:fontcolor=white'
 # final concatenation of all video segments
 final_ffmpeg = '/usr/bin/ffmpeg  -f concat -safe 0 -i concat_list.txt -c copy -y {0}_output.mkv\n'
 
 old_names = list(pathlib.Path('./old/').glob('eye2-*.jpeg')) # timelapse images already moved out from working folder
-img_names = list(pathlib.Path('.').glob('eye2-*.jpeg'))
+img_names = list(pathlib.Path('./current').glob('eye2-*.jpeg'))
 vid_names = list(pathlib.Path('./motions/').glob('*.mp4')) # motion detection videos
 
 stats = ((os.stat(path), path) for path in old_names + img_names + vid_names)
@@ -48,13 +48,13 @@ for index, row in enumerate(files):
         timestr = timestr[5:19]
         dt_format = "%Y%m%d%H%M%S"
         video_start_time = time.mktime(time.strptime(timestr, dt_format))
-    swap in the new row
+    # swap in the new row
     temp=list(files[index])
     temp[0] = video_start_time
     files[index] = tuple(temp)
 
 # start at 6AM yesterday, end this morning
-start6am = (int(time.time() // 86400)) * 86400 - 3600*14  # 6am local time yesterday: TODO, handle DST
+start6am = (int(time.time() // 86400)) * 86400 - 3600*14 # 6am local time yesterday: TODO, handle DST
 end6am = start6am + 24*3600
 
 segment = 0
@@ -74,7 +74,7 @@ for cdate, path in sorted(files):
             # then reset for next batch
             if len(inputs) > 0:
                 filename = 'inputs{0:03d}'.format(segment)
-                with open( filename, 'w') as f:
+                with open( 'assemble/'+filename, 'w') as f:
                     f.write(inputs)
                     f.close()
                     assemble_file.write(image_ffmpeg.format(filename, segment))
@@ -93,7 +93,7 @@ for cdate, path in sorted(files):
 # finish off any remaining timestamp
 if len(inputs) > 0:
     filename = 'inputs{0:03d}'.format(segment)
-    with open( filename, 'w') as f:
+    with open( 'assemble/'+filename, 'w') as f:
         f.write(inputs)
         f.close()
         assemble_file.write(image_ffmpeg.format(filename, segment))
