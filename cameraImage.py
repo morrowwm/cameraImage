@@ -1,14 +1,13 @@
 #!/usr/bin/python3
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 import time
-import datetime as dt
+import datetime
 import os
 import cv2
-import traceback
-import threading
 import subprocess
 import yaml
+import ephem
+import math
 
 global capture
 global config
@@ -34,11 +33,11 @@ def do_image():
         ret, frame = capture.read()
         capture.release()
 
-        # Check if the frame was read successfully
+        # if the frame was read successfully, prepare output images
         if ret:
             # Timestamp and save the frame as a JPEG image
-            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-            text_pos = [16, 48, 172, 600]
+            timestamp = time.strftime("%Y-%m-%d %H:%M")
+            text_pos = [1372, 1420, 2048, 2648]
             text_region = frame[text_pos[0]:text_pos[1], text_pos[2]: text_pos[3]]
             brightness = cv2.mean(text_region) 
             font_color = [0, 0, 0]
@@ -55,12 +54,36 @@ def do_image():
 
             timestamp = time.strftime("%Y%m%d%H%M%S")
 
-            filename = f"{config['image_folder']}/eye2-{timestamp}.jpeg"
+            filename = f"{config['image_dir']}/eye2-{timestamp}.jpeg"
             # copy over to server for building timelapse movie
             cv2.imwrite(filename, frame, [cv2.IMWRITE_JPEG_QUALITY, 95])
             p = subprocess.Popen(["/usr/bin/scp", filename, config['timelapse_dir']])
             status = os.waitpid(p.pid, 0)
             print(f"Saved frame {filename} to {config['timelapse_dir']}")
+            # if sunrise save that especially
+            here = ephem.Observer()
+            here.date = ephem.now()
+            here.lon  = math.radians(config['longitude'])
+            here.lat  = math.radians(config['latitude'])
+            here.elev = config['elevation']
+            # adjust for US Naval Almanac sunrise definition
+            here.pressure= 0
+            here.horizon = '-0:34'
+            sunrise=here.previous_rising(ephem.Sun()).datetime() #Sunrise
+            sunset =here.next_setting   (ephem.Sun()).datetime() #Sunset
+            now = here.date.datetime()
+            offset = 27
+            before = sunrise+datetime.timedelta(minutes=offset)
+            after = sunrise+datetime.timedelta(minutes=offset+1)
+            print("sunrise: {}\nbefore: {}\nafter: {}\nnow: {}\n".format(sunrise.strftime("%H:%M:%S"), 
+                                                                         before.strftime("%H:%M:%S"), 
+                                                                         after.strftime("%H:%M:%S"), 
+                                                                         now.strftime("%H:%M:%S")))
+            if before <= now <= after:
+                pic_time = now.strftime("%Y-%m-%d %H:%M:%S")
+                p = subprocess.Popen(["/usr/bin/scp", filename, config['sunrise_dir']])
+                status = os.waitpid(p.pid, 0)
+                print(f"Saved frame {filename} to {config['sunrise_dir']}")
 
             # process, and copy over to server for use in website page
             website_image = cv2.resize(frame, (720,405))
@@ -81,7 +104,6 @@ def do_image():
 
         else:
             print("Error reading frame")
-
     else:
         print("Error opening video stream")
 
