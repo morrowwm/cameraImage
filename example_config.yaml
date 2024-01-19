@@ -5,4 +5,8 @@ rtsp_url: rtsp://fred@flintstone.br:yabba-dabba@192.168.0.8/stream1
 snapshot_file: yard.jpg
 website_dir: trex:/home/flintstone/web/attachments/
 timelapse_dir: stego:/opt/surveillance/camera0
+sunrise_dir: stego:/opt/surveillance/camera0/sunrise
 video_folder: /home/fred/cam/videos
+latitude: 31.00482047227454
+longitude: 47.4417953143620
+elevation: 100
