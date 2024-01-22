@@ -1,3 +1,9 @@
+# this script finds snapshot images and motion detection videos created by a security camera and copied into the referenced directories
+# it creates a shell script to call ffmpeg to 
+# assemble all the images into time lapse video segements in between the motion videos
+# truncate motion videos and speed them up, to make previews of motion
+# concatenate the motion and (created) time lapse videos into one overall video
+
 from stat import S_ISREG, ST_CTIME, ST_MODE
 import os, sys, time
 import pathlib
@@ -19,17 +25,17 @@ Failed to inject frame into filter network: Function not implemented
 
 
 dir_path = '.'
-# 4 times speed, resample to 30fps, remove audio, only first ten seconds of motion video. Don't overwrite existing
+# for motion videos 4 times speed, resample to 30fps, remove audio, only first ten seconds of motion video. Don't overwrite existing
 video_ffmpeg = '/usr/bin/ffmpeg -i "{0}" -r 30 -filter:v "setpts=PTS/4,fps=30,{1}" -an -n -ss 0 -t 10 -vcodec libx265 segment{2:03d}.mkv\n'
-# concatenate images into a video segment. frame rate is defined in input list
+# for time lapse, concatenate images into a video segment. frame rate is defined in input list
 image_ffmpeg = '/usr/bin/ffmpeg -safe 0 -r 30 -f image2 -f concat -i {0} -vcodec libx265 -n segment{1:03d}.mkv\n'
 # text format for timestamp on motion video (I don't like the timestamp provided by the camera)
 video_text = 'drawtext=text=\'Motion detected at\: {0}\':x=48:y=48:fontsize=32:fontcolor=white'
 # final concatenation of all video segments
-final_ffmpeg = '/usr/bin/ffmpeg  -f concat -safe 0 -i concat_list.txt -c copy -y {0}_output.mkv\n'
+final_ffmpeg = '/usr/bin/ffmpeg  -f concat -safe 0 -i concat_list.txt -c copy -y {0}_output.mkv'
 
-old_names = list(pathlib.Path('./old/').glob('eye2-*.jpeg')) # timelapse images already moved out from working folder
-img_names = list(pathlib.Path('./current').glob('eye2-*.jpeg'))
+old_names = list(pathlib.Path('./old/').glob('20??-??-??/eye2-*.jpeg')) # time lapse images already moved out from working folder
+img_names = list(pathlib.Path('./current').glob('eye2-*.jpeg')) # current time lapse images not yet moved over to old
 vid_names = list(pathlib.Path('./motions/').glob('*.mp4')) # motion detection videos
 
 stats = ((os.stat(path), path) for path in old_names + img_names + vid_names)
@@ -84,13 +90,14 @@ for cdate, path in sorted(files):
             # then output video at faster speed and preview first few seconds. Also add a timestamp
             timebanner = video_text.format(timestamp)
             assemble_file.write('# preceded by images epoch {}\n'.format(cdate))
+            # add this video to the assemble script
             assemble_file.write(video_ffmpeg.format(path.resolve(), timebanner, segment))
             concat_list.write('file segment{0:03d}.mkv\n'.format(segment))
             segment = segment+1
         else:
             print(f"{path.resolve()} is unknown type")
 
-# finish off any remaining timestamp
+# finish off any remaining timestamp images
 if len(inputs) > 0:
     filename = 'inputs{0:03d}'.format(segment)
     with open( 'assemble/'+filename, 'w') as f:
